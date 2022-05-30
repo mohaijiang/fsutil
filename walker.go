@@ -42,6 +42,10 @@ const (
 	MapResultSkipDir
 )
 
+type MatchInfo struct {
+	parentMatched []bool
+}
+
 func Walk(ctx context.Context, p string, opt *WalkOpt, fn filepath.WalkFunc) error {
 	root, err := filepath.EvalSymlinks(p)
 	if err != nil {
@@ -117,8 +121,8 @@ func Walk(ctx context.Context, p string, opt *WalkOpt, fn filepath.WalkFunc) err
 		path             string
 		origpath         string
 		pathWithSep      string
-		includeMatchInfo fileutils.MatchInfo
-		excludeMatchInfo fileutils.MatchInfo
+		includeMatchInfo MatchInfo
+		excludeMatchInfo MatchInfo
 		calledFn         bool
 	}
 
@@ -173,18 +177,20 @@ func Walk(ctx context.Context, p string, opt *WalkOpt, fn filepath.WalkFunc) err
 		skip := false
 
 		if includeMatcher != nil {
-			var parentIncludeMatchInfo fileutils.MatchInfo
-			if len(parentDirs) != 0 {
-				parentIncludeMatchInfo = parentDirs[len(parentDirs)-1].includeMatchInfo
-			}
-			m, matchInfo, err := includeMatcher.MatchesUsingParentResults(path, parentIncludeMatchInfo)
+			//var parentIncludeMatchInfo MatchInfo
+			//if len(parentDirs) != 0 {
+			//	parentIncludeMatchInfo = parentDirs[len(parentDirs)-1].includeMatchInfo
+			//}
+			//m, matchInfo, err := includeMatcher.MatchesUsingParentResults(path, parentIncludeMatchInfo)
+
+			m, err := includeMatcher.Matches(path)
 			if err != nil {
 				return errors.Wrap(err, "failed to match includepatterns")
 			}
 
-			if isDir {
-				dir.includeMatchInfo = matchInfo
-			}
+			//if isDir {
+			//	dir.includeMatchInfo = matchInfo
+			//}
 
 			if !m {
 				if isDir && onlyPrefixIncludes {
@@ -208,18 +214,19 @@ func Walk(ctx context.Context, p string, opt *WalkOpt, fn filepath.WalkFunc) err
 		}
 
 		if excludeMatcher != nil {
-			var parentExcludeMatchInfo fileutils.MatchInfo
-			if len(parentDirs) != 0 {
-				parentExcludeMatchInfo = parentDirs[len(parentDirs)-1].excludeMatchInfo
-			}
-			m, matchInfo, err := excludeMatcher.MatchesUsingParentResults(path, parentExcludeMatchInfo)
+			//var parentExcludeMatchInfo MatchInfo
+			//if len(parentDirs) != 0 {
+			//	parentExcludeMatchInfo = parentDirs[len(parentDirs)-1].excludeMatchInfo
+			//}
+			//m, matchInfo, err := excludeMatcher.MatchesUsingParentResults(path, parentExcludeMatchInfo)
+			m, err := excludeMatcher.Matches(path)
 			if err != nil {
 				return errors.Wrap(err, "failed to match excludepatterns")
 			}
 
-			if isDir {
-				dir.excludeMatchInfo = matchInfo
-			}
+			//if isDir {
+			//	dir.excludeMatchInfo = matchInfo
+			//}
 
 			if m {
 				if isDir && onlyPrefixExcludeExceptions {
